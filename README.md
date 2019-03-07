@@ -1,7 +1,7 @@
 # EnhancedDCM
 Enhancing Discrete Choice Models with Learning Representation : The Learning MultiNomial Logit
 
-This is the original keras implementation of L-MNL with examples used in [Let Me Not Lie: Learning MultiNomial Logit](https://arxiv.org/abs/1812.09747). 
+This is the original keras implementation of L-MNL with examples used in our paper: [Let Me Not Lie: Learning MultiNomial Logit](https://arxiv.org/abs/1812.09747). 
 
 
 ## Prerequisites
@@ -25,10 +25,11 @@ In utilities, there are the common scripts for any datasets.
 * `grad_hess_utilities.py` is used for investigating and visualizing the trained models. 
 
 Every dataset has its own folder and main run script.
+
 In the folder you will find:
 * `data_manager.py` - This is the most important script for each experiment. It must read through your dataset and prepare the inputs for the model. This is where the utility functions are defined with the input set X and where we prepare the Neural network features Q.
-    * The first input for the utilities must be of dimension: # individuals x (beta number + 1) x choice number. The added +1 in the first dimension is the label, 1 or 0, wether the alternative was chosen or not. 
-    * The second input for the neural network component must be of dimension: # individuals x Q_features x 1
+    * The first input for the utilities must be of dimension: [#individuals x (beta number + 1) x choice number]. The added +1 in the second dimension is the label, 1 or 0, wether the alternative was chosen or not. 
+    * The second input for the neural network component must be of dimension: [#individuals x Q_features x 1]
     * Caution: The code was made modular by giving flexibility to paths and file names. Exception lies with the naming convention of the inputs. The second input must have the same name as the first, say 'xx.npy', but with an added '_extra'. As such, we get: 'xx_extra.npy' for the name of the second input.
 * the dataset or scripts to generate the dataset
 * folders to contain the various experiments (datasets, trained models, ...)
@@ -62,6 +63,17 @@ For the semi-synthetic data experiment, run:
 cd research_examples/semi_synthetic/
 python3 synth_data_generator.py 
 ```
+
+you can now run the experiments in the folder `research_examples/` with: 
+
+```
+python3 generated_run.py --scan --mc --mc_hr --corr --unseen
+```
+or
+```
+python3 semi_synthetic_run.py
+```
+
 
 ## Add your own dataset
 
