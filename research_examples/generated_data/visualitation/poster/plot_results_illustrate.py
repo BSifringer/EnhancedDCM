@@ -6,7 +6,6 @@ import pickle
 #sns.set()
 import numpy as np
 import pickle
-from tqdm import tqdm
 
 if __name__ == "__main__" and __package__ is None:
 	""" Imports fix, Call function in it's directory """

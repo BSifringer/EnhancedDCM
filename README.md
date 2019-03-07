@@ -16,6 +16,7 @@ The code successfully runs with:
 For visualization, you will also need these python packages:
 * matplotlib
 * seaborn
+* tqdm
 
 ## Running a dataset
 In utilities, there are the common scripts for any datasets. 

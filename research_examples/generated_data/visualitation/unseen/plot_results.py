@@ -34,7 +34,7 @@ for case in cases:
 
 	rel_error = rel_error[b]
 
-	print(case + ': {}'.format(rel_error.mean()) + " ± {}".format(rel_error.std()))
+	print(case + ': {}'.format(rel_error.mean()) + " +- {}".format(rel_error.std()))
 	plt.plot(range(len(rel_error)), rel_error)
 plt.show()	
 
@@ -48,7 +48,7 @@ for case in cases:
 
 	rel_error = rel_error[a]
 
-	print(case + ': {}'.format(rel_error.mean()) + " ± {}".format(rel_error.std()))
+	print(case + ': {}'.format(rel_error.mean()) + " +- {}".format(rel_error.std()))
 	plt.plot(range(len(rel_error)), rel_error)
 plt.show()	
 
@@ -73,7 +73,7 @@ for case in cases:
 	#rel_error_ratio = rel_error_ratio[(rel_error_ratio<3)] 
 	#rel_print = [j if rel>3 else '' for j,rel in enumerate(rel_error_ratio) ]
 	#print(rel_print)
-	print(case + ': {}'.format(rel_error_ratio.mean()) + " ± {}".format(rel_error_ratio.std()))
+	print(case + ': {}'.format(rel_error_ratio.mean()) + " +- {}".format(rel_error_ratio.std()))
 	plt.plot(range(len(rel_error_ratio)), rel_error_ratio)
 plt.legend(cases)
 plt.show()
@@ -81,12 +81,12 @@ plt.show()
 print('\n\n----- Likelihood Train set -----') 
 for case in cases:
 	likelihood = [encyclopedia[a]['likelihood_train_' + case] for a in range(n_range)]
-	print(case + ': {}'.format(np.array(likelihood).mean())+ " ± {}".format(np.array(likelihood).std()))
+	print(case + ': {}'.format(np.array(likelihood).mean())+ " +- {}".format(np.array(likelihood).std()))
 
 print('\n\n----- Likelihood Test set -----')
 for case in cases:
 	likelihood = [encyclopedia[a]['likelihood_test_' + case] for a in range(n_range)]
-	print(case + ': {}'.format(np.array(likelihood).mean())+ " ± {}".format(np.array(likelihood).std()))
+	print(case + ': {}'.format(np.array(likelihood).mean())+ " +- {}".format(np.array(likelihood).std()))
 
 
 print('\n\n------- Percentage of t-test passed --------')

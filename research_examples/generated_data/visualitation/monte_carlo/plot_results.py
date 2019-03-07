@@ -63,7 +63,7 @@ for case in cases:
 	error = abs(np.array([beta[b2_pos] for beta in betas_final]) - np.array(coefs_a2))
 	rel_error = abs(error/coefs_a2)
 
-	print(case + ': {}'.format(rel_error.mean()) + " ± {}".format(rel_error.std()))
+	print(case + ': {}'.format(rel_error.mean()) + " +- {}".format(rel_error.std()))
 	plt.plot(range(len(rel_error)), rel_error)
 plt.show()	
 
@@ -74,7 +74,7 @@ for case in cases:
 	error = abs(np.array([beta[b1_pos] for beta in betas_final]) - np.array(coefs_a1))
 	rel_error = abs(error/coefs_a1)
 
-	print(case + ': {}'.format(rel_error.mean()) + " ± {}".format(rel_error.std()))
+	print(case + ': {}'.format(rel_error.mean()) + " +- {}".format(rel_error.std()))
 	plt.plot(range(len(rel_error)), rel_error)
 plt.show()	
 
@@ -90,7 +90,7 @@ for case in cases:
 	rel_error_a2 = abs(error_a2/coefs_a2)
 	rel_error_ratio =  abs((rel_error_a1-rel_error_a2)/(1-rel_error_a1))
 
-	print(case + ': {}'.format(rel_error_ratio.mean()) + " ± {}".format(rel_error_ratio.std()))
+	print(case + ': {}'.format(rel_error_ratio.mean()) + " +- {}".format(rel_error_ratio.std()))
 	plt.plot(range(len(rel_error_ratio)), rel_error_ratio)
 plt.legend(cases)
 plt.show()
@@ -99,12 +99,12 @@ plt.show()
 print('\n\n----- Likelihood Train set -----')
 for case in casesNN:
 	likelihood = [encyclopedia[a]['likelihood_train_' + case] for a in range(n_range)]
-	print(case + ': {}'.format(np.array(likelihood).mean())+ " ± {}".format(np.array(likelihood).std()))
+	print(case + ': {}'.format(np.array(likelihood).mean())+ " +- {}".format(np.array(likelihood).std()))
 
 print('\n\n----- likelihood_test_ -----')
 for case in casesNN:
 	likelihood = [encyclopedia[a]['likelihood_test_' + case] for a in range(n_range)]
-	print(case + ': {}'.format(np.array(likelihood).mean())+ " ± {}".format(np.array(likelihood).std()))
+	print(case + ': {}'.format(np.array(likelihood).mean())+ " +- {}".format(np.array(likelihood).std()))
 
 print('\n\n------- Percentage of t-test passed --------')
 for case in cases:

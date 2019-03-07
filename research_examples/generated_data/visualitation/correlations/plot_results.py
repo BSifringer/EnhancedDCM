@@ -51,7 +51,7 @@ for c, case in enumerate(cases):
 
 		rel_error = abs((rel_error_a1-rel_error_a2)/(1-rel_error_a2))
 
-		print(case + ': {}'.format(rel_error.mean()) + " ± {}".format(rel_error.std()))
+		print(case + ': {}'.format(rel_error.mean()) + " +- {}".format(rel_error.std()))
 		if i == 0:
 			ax.bar(i+delta,100*rel_error.mean(), width=w, color=colors[c], label = legend[case])
 		else:
@@ -79,7 +79,7 @@ for c, case in enumerate(cases):
 		error = abs(np.array([beta[1] for beta in betas_final]) - np.array(a1))
 		rel_error = abs(error/(np.array(a1)))
 
-		print(case + ': {}'.format(rel_error.mean()) + " ± {}".format(rel_error.std()))
+		print(case + ': {}'.format(rel_error.mean()) + " +- {}".format(rel_error.std()))
 		if i == 0:
 			ax.bar(i+delta,100*rel_error.mean(), width=w, color=colors[c], label = legend[case])
 		else:
@@ -107,7 +107,7 @@ for c, case in enumerate(cases):
 		error = abs(np.array([beta[2] for beta in betas_final]) - np.array(a2))
 		rel_error = abs(error/(np.array(a2)))
 
-		print(case + ': {}'.format(rel_error.mean()) + " ± {}".format(rel_error.std()))
+		print(case + ': {}'.format(rel_error.mean()) + " +- {}".format(rel_error.std()))
 		ax.bar(i+delta,rel_error.mean(), width=w, color=colors[c])
 		if i == 0:
 			ax.bar(i+delta,100*rel_error.mean(), width=w, color=colors[c], label = legend[case])
