@@ -1,0 +1,3 @@
+# Do not upload/commit models or data arrays
+*
+!.gitignore

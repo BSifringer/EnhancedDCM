@@ -1,0 +1,7 @@
+# Do not upload/commit models or data arrays, except original models for first commit
+*
+!.gitignore
+!generated_0_Enhancedscan100extra.h5
+!generated_0_MNL_Full.h5
+!generated_0_test
+!generated_0_train
