@@ -20,7 +20,7 @@ if __name__ == "__main__" and __package__ is None:
 
 	__package__ = "generated_data"
 
-from EnhancedDCM.utilities import grad_hess_utilities as ghu
+from utilities import grad_hess_utilities as ghu
 from generated_data import data_manager as dm
 from keras.models import load_model
 

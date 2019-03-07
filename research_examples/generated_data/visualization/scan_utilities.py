@@ -1,4 +1,4 @@
-from EnhancedDCM.utilities import grad_hess_utilities as ghu
+from utilities import grad_hess_utilities as ghu
 from keras.models import load_model
 from generated_data import data_manager as dm
 import numpy as np

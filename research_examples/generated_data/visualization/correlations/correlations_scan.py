@@ -20,7 +20,7 @@ if __name__ == "__main__" and __package__ is None:
 
 import numpy as np
 import pickle
-import Tensorflow.scan_utilities as su
+import scan_utilities as su
 
 if __name__ == '__main__':
 
