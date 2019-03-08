@@ -40,7 +40,7 @@ from keras.optimizers import RMSprop, Adam, SGD
 
 
 def runMNL(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_name, batchSize, filePart = '',
-		   saveName = '', loss='categorical_crossentropy', logits_activation = 'softmax'):
+		   saveName = '', loss='categorical_crossentropy', logits_activation = 'softmax', verbose = 0):
 	saveExtension = 'MNL' + saveName
 
 	model = mdl.MNL(beta_num, choices_num, logits_activation=logits_activation)
@@ -48,7 +48,7 @@ def runMNL(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_na
 	model.compile(optimizer = optimizer, metrics = ["accuracy"], loss = loss)
 
 	tu.train_sameInput(fileInputName, nEpoch, model, train_data_name, batchSize, filePath = filePath,
-					   saveExtension = saveExtension, filePart = filePart )
+					   saveExtension = saveExtension, filePart = filePart, verbose = verbose, validationRatio=0 )
 
 	betas = tu.saveBetas(fileInputName, model, filePath = filePath, saveExtension = saveExtension)
 
@@ -60,7 +60,7 @@ def runMNL(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_na
 
 def runNN(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_name, batchSize,
 		  extraInput = False, nExtraFeatures = None, filePart = '', saveName = '', networkSize=100,
-		  loss='categorical_crossentropy', logits_activation = 'softmax'):
+		  loss='categorical_crossentropy', logits_activation = 'softmax', verbose = 0):
 
 	saveExtension = 'NN' + saveName
 	if extraInput:
@@ -73,10 +73,10 @@ def runNN(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_nam
 	model.compile(optimizer = optimizer, metrics = ["accuracy"], loss = loss)
 	if extraInput:
 		tu.train_extraInput(fileInputName, nEpoch, model, train_data_name, batchSize, filePath = filePath,
-							saveExtension = saveExtension, filePart = filePart, NN = True)
+							saveExtension = saveExtension, filePart = filePart, NN = True, verbose = verbose, validationRatio=0)
 	else:
 		tu.train_sameInput(fileInputName, nEpoch, model, train_data_name, batchSize, filePath = filePath,
-						   saveExtension = saveExtension, filePart = filePart)
+						   saveExtension = saveExtension, filePart = filePart, verbose = verbose, validationRatio=0)
 
 	#plot_model(model, to_file = filePath + fileInputName+'_'+saveExtension+'.png')
 	return saveExtension
@@ -101,10 +101,10 @@ def runMixed(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_
 
 	if extraInput:
 		tu.train_extraInput(fileInputName, nEpoch, model, train_data_name, batchSize, filePath = filePath,
-							saveExtension = saveExtension, filePart = filePart, verbose = verbose )
+							saveExtension = saveExtension, filePart = filePart, verbose = verbose, validationRatio=0 )
 	else:
 		tu.train_sameInput(fileInputName, nEpoch, model, train_data_name, batchSize, filePath = filePath,
-						   saveExtension = saveExtension, filePart = filePart, verbose = verbose )
+						   saveExtension = saveExtension, filePart = filePart, verbose = verbose, validationRatio=0 )
 
 	betas = tu.saveBetas(fileInputName, model, filePath = filePath, saveExtension = saveExtension)
 

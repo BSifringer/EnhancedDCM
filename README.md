@@ -30,7 +30,7 @@ Every dataset has its own folder and main run script.
 In the folder you will find:
 * `data_manager.py` - This is the most important script for each experiment. It must read through your dataset and prepare the inputs for the model. This is where the utility functions are defined with the input set X and where we prepare the Neural network features Q.
     * The first input for the utilities must be of dimension: [#individuals x (beta number + 1) x choice number]. The added +1 in the second dimension is the label, 1 or 0, wether the alternative was chosen or not. 
-    * The second input for the neural network component must be of dimension: [#individuals x Q_features x 1]
+    * The second input for the neural network component must be of dimension: [#individuals x Q_features]
     * Caution: The code was made modular by giving flexibility to paths and file names. Exception lies with the naming convention of the inputs. The second input must have the same name as the first, say 'xx.npy', but with an added '_extra'. As such, we get: 'xx_extra.npy' for the name of the second input.
 * the dataset or scripts to generate the dataset
 * folders to contain the various experiments (datasets, trained models, ...)
@@ -49,6 +49,7 @@ python3 swissmetro_paper_run --models --scan
 
 All other experiments need to have their necessary datasets generated first as explained below. This is to avoid excessive memory size of this git folder.
 
+When a model is done training, it will print out its beta values when applicable. Model investigation, including std estimation with the Hessian, saliency maps, etc..., can be found in visualization codes. 
 
 ## Generate the synthetic datasets
 
@@ -84,7 +85,7 @@ Goals:
 * Optional: Tweak scripts in utilities to change optimizers, add your models, add cross validation methods, etc.. 
 
 
-The key for training your own dataset on L-MNL is splitting features into 2 sets, X and Q, and then use the common utilities with a main script. To do this, X is of shape [# individuals x (beta number + 1) x choice number] and corresponds to the utility functions. The added +1 in the first dimension is the label, 1 or 0, wether the alternative was chosen or not. Q is of shape [# individuals x Q_features x 1].
+The key for training your own dataset on L-MNL is splitting features into 2 sets, X and Q, and then use the common utilities with a main script. To do this, X is of shape [#individuals x (beta number + 1) x choice number] and corresponds to the utility functions. The added +1 in the first dimension is the label, 1 or 0, wether the alternative was chosen or not. Q is of shape [#individuals x Q_features].
 
 In the given examples, this is done in their respective `data_manager.py`, keras_input() function, where the two sets are saved as vectors in 'xx.npy' and 'xx_extra.npy', and the name 'xx' is returned. When the name is given to a run_utils.py function, it will train the corresponding model to your dataset. This is done in the main script for each dataset with names ending with '_run.py', where we call upon keras_input() with an architecture and data input specific to each experiment, and then train a model with a run_utils function. 
 
