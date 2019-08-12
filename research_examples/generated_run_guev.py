@@ -1,4 +1,4 @@
-from generated_data import data_manager as generatedDM
+from generated_guev import data_manager as generatedDM
 from keras import backend as K
 if __name__ == "__main__" and __package__ is None:
     from sys import path
@@ -55,12 +55,12 @@ correlations = args.corr
 unseen = args.unseen
 noise_data = False
 
-choices_num = 1
+choices_num = 2
 batchSize = 50
 
 
 def GeneratedMNL(filePath, fileInputName, beta_num, choices_num, train_data_name, filePart = '', saveName = '',
-				 loss='binary_crossentropy', logits_activation='sigmoid'):
+				 loss='categorical_crossentropy', logits_activation='softmax'):
 
 	nEpoch = 150
 	betas, saveExtension = ru.runMNL(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_name, batchSize,
@@ -70,7 +70,7 @@ def GeneratedMNL(filePath, fileInputName, beta_num, choices_num, train_data_name
 
 def GeneratedNN(filePath, fileInputName, beta_num, choices_num, nExtraFeatures, train_data_name, extraInput = False,
 				filePart = '',  saveName = '',
-				networkSize = 100, loss='binary_crossentropy', logits_activation='sigmoid'):
+				networkSize = 100, loss='categorical_crossentropy', logits_activation='softmax'):
 
 	nEpoch = 200
 	saveExtension = ru.runNN(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_name, batchSize, extraInput,
@@ -81,7 +81,7 @@ def GeneratedNN(filePath, fileInputName, beta_num, choices_num, nExtraFeatures, 
 
 def GeneratedMixed(filePath, fileInputName, beta_num, choices_num, nExtraFeatures, train_data_name, extraInput = False,
 				   minima = None, train_betas = True, filePart = '', saveName = '', networkSize = 100,
-				   loss='binary_crossentropy', logits_activation='sigmoid'):
+				   loss='categorical_crossentropy', logits_activation='softmax'):
 	nEpoch = 200
 	betas, saveExtension = ru.runMixed(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_name,  batchSize,
 										extraInput, nExtraFeatures, minima, train_betas, filePart, saveName = saveName,
@@ -89,8 +89,19 @@ def GeneratedMixed(filePath, fileInputName, beta_num, choices_num, nExtraFeature
 	K.clear_session()
 	return betas, saveExtension
 
+def GeneratedHrusch07(filePath, fileInputName, beta_num, choices_num, nExtraFeatures, train_data_name,
+ 					filePart = '', saveName = '', networkSize = 100,
+					loss='categorical_crossentropy', logits_activation='softmax'):
+	nEpoch = 200
+
+	saveExtension = ru.runHrusch07(filePath, fileInputName, beta_num, choices_num, nEpoch, train_data_name, batchSize,
+									 filePart, saveName=saveName)
+	K.clear_session()
+	return saveExtension
+
+
 def GeneratedSub(filePath, fileInputName, beta_num, choices_num, nExtraFeatures, train_data_name, extraInput=True,
-					minima=None, train_betas=True, filePart='', saveName='', loss='binary_crossentropy', logits_activation='sigmoid',
+					minima=None, train_betas=True, filePart='', saveName='', loss='categorical_crossentropy', logits_activation='softmax',
 					networkSize=100, hidden_layers=1, verbose=0):
 	nEpoch = 200
 
@@ -106,23 +117,29 @@ if __name__ == '__main__':
 	extensions = ['_train', '_test']
 
 	if neuron_scan:
-		filePath = 'generated_data/'
+		filePath = 'generated_guev/'
 		folderName = 'illustrate/'
 		fileInputName = 'generated_0'
-		list = [2, 5, 10, 15, 25, 50, 100, 200, 500, 1001, 2000]
+		list = [2, 5, 10, 15, 25, 50, 100, 200, 500, 1001]
+		list = [2000, 5000]
 		simpleArchitecture = True
 		beta_num = 3
 		nExtraFeatures = 3
 
 		print("Simple Architecture MNL model")
-		_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
+		_,_, train_data_name, beta_num, nExtraFeatures = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
 		GeneratedMNL(filePath+folderName, fileInputName,  beta_num, choices_num, train_data_name, filePart = extensions[0] )
 		generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[1], simpleArchitecture = simpleArchitecture) # create keras input for test set
+
+		print("True Architecture MNL model")
+		_,_, train_data_name, beta_num, nExtraFeatures = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], trueArchitecture = simpleArchitecture) # create keras input for train set
+		GeneratedMNL(filePath+folderName, fileInputName,  beta_num, choices_num, train_data_name, filePart = extensions[0] )
+		generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[1], trueArchitecture = simpleArchitecture) # create keras input for test set
 
 		print("Neuron scan on L-MNL")
 		lmnlArchitecture = True
 		beta_num = 2
-		_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], lmnlArchitecture = lmnlArchitecture) # create keras input for train set
+		_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], lmnlArchitecture = lmnlArchitecture) # create keras input for train set
 		for i in list:
 			print("----------- L-MNL with {} Neurons ------".format(i))
 			_, saveExtension = GeneratedMixed(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
@@ -133,12 +150,12 @@ if __name__ == '__main__':
 		simpleArchitecture = False
 		beta_num = 6
 		nExtraFeatures = 0
-		_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0]) # create keras input for train set
+		_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0]) # create keras input for train set
 		GeneratedMNL(filePath+folderName, fileInputName,  beta_num, choices_num, train_data_name, filePart = extensions[0], saveName = '_Full')
 		generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[1]) # create keras input for train set
 
 	if experiment:
-		filePath = 'generated_data/'
+		filePath = 'generated_guev/'
 		folderName = 'illustrate/'
 		fileInputName = 'generated_0'
 		correlArchitecture = True
@@ -148,14 +165,14 @@ if __name__ == '__main__':
 		# _, saveExtension = GeneratedMixed(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
 		# 						  train_data_name, extraInput = True, filePart = extensions[0], networkSize = 15, saveName = "_correl")
 		subArchitecture = True
-		_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], subArchitecture = subArchitecture) # create keras input for train set
+		_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], subArchitecture = subArchitecture) # create keras input for train set
 		_, saveExtension = GeneratedSub(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
 								  train_data_name, extraInput = True, filePart = extensions[0], networkSize = 15)
 
 
 #---------------------- Monte Carlo Simulation for all models --------------------
 	if monte_carlo:
-		filePath = 'generated_data/'
+		filePath = 'generated_guev/'
 		folderName = 'monte_carlo/'
 		fileInputBase = 'generated'
 
@@ -166,7 +183,7 @@ if __name__ == '__main__':
 			simpleArchitecture = False
 			beta_num = 6 # ASC + 5 betas
 			nExtraFeatures = 0
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
 
 			print('-- Full MNL -- ')
 			_, saveExtension = GeneratedMNL(filePath+folderName, fileInputName,  beta_num, choices_num, train_data_name,
@@ -181,7 +198,7 @@ if __name__ == '__main__':
 			simpleArchitecture = True
 			beta_num = 3
 			nExtraFeatures = 3
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
 
 			print('-- MNL Hybrid --')
 			_, saveExtension = GeneratedMixed(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
@@ -193,7 +210,7 @@ if __name__ == '__main__':
 			print('-- Our Model L-MNL --')
 			lmnlArchitecture = True
 			beta_num = 2
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0],
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0],
 														   lmnlArchitecture = lmnlArchitecture) # create keras input for train set
 			_, saveExtension = GeneratedMixed(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
 											  train_data_name, extraInput = True, filePart = extensions[0], networkSize = 100)
@@ -202,12 +219,12 @@ if __name__ == '__main__':
 			print('--True MNL---')
 			trueArchitecture = True
 			beta_num = 4
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], trueArchitecture = trueArchitecture)
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], trueArchitecture = trueArchitecture)
 			_, saveExtension = GeneratedMNL(filePath+folderName, fileInputName,  beta_num, choices_num, train_data_name, filePart = extensions[0], saveName = '_True')
 
 	if Hruschka:
 		# Models here are equivalent to Hruschka 04 and 07 when faced with binary crossentropy
-		filePath = 'generated_data/'
+		filePath = 'generated_guev/'
 		folderName = 'monte_carlo_Hruschka/'
 		folderName_data = 'monte_carlo/'
 		fileInputBase = 'generated'
@@ -219,35 +236,41 @@ if __name__ == '__main__':
 			simpleArchitecture = False
 			beta_num = 6 # ASC + 5 betas
 			nExtraFeatures = 0
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName_data,fileInputName, filePart = extensions[0],
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName_data,fileInputName, filePart = extensions[0],
 														   simpleArchitecture = simpleArchitecture) # create keras input for train set
 
 			print('-- Hruschka Full MNL --')
-			_, saveExtension = GeneratedMixed(filePath+folderName, fileInputName,  beta_num, choices_num, nExtraFeatures,
-											  train_data_name, extraInput = False, filePart = extensions[0], networkSize = 3,
-											  saveName = '_Full')
-			print('-- Hruschka2004 100 --')
-			saveExtension = GeneratedNN(filePath+folderName, fileInputName,  beta_num, choices_num, nExtraFeatures,
-										train_data_name, extraInput = False, filePart = extensions[0], networkSize = 100,
-										saveName = '_Big_Full')
-			print('-- Hruschka2004 3 --')
-			saveExtension = GeneratedNN(filePath+folderName, fileInputName,  beta_num, choices_num, nExtraFeatures, train_data_name,
-										   extraInput = False, filePart = extensions[0], networkSize = 3, saveName = '_Small_Full')
-			generatedDM.keras_input(filePath+folderName_data,fileInputName, filePart = extensions[1], simpleArchitecture = simpleArchitecture) # create keras input for test set
+			# _, saveExtension = GeneratedMixed(filePath+folderName, fileInputName,  beta_num, choices_num, nExtraFeatures,
+			# 								  train_data_name, extraInput = False, filePart = extensions[0], networkSize = 3,
+			# 								  saveName = '_Full')
+			# saveExtension = GeneratedHrusch07(filePath+folderName, fileInputName,  beta_num, choices_num, nExtraFeatures,
+			# 								  train_data_name, filePart = extensions[0], networkSize = 3,
+			# 								  saveName = '_Full')
+			saveExtension = GeneratedHrusch07(filePath+folderName, fileInputName,  beta_num, choices_num, nExtraFeatures,
+														  train_data_name, filePart = extensions[0], networkSize = 100,
+														  saveName = '_Full_100')
+			# print('-- Hruschka2004 100 --')
+			# saveExtension = GeneratedNN(filePath+folderName, fileInputName,  beta_num, choices_num, nExtraFeatures,
+			# 							train_data_name, extraInput = False, filePart = extensions[0], networkSize = 100,
+			# 							saveName = '_Big_Full')
+			# print('-- Hruschka2004 3 --')
+			# saveExtension = GeneratedNN(filePath+folderName, fileInputName,  beta_num, choices_num, nExtraFeatures, train_data_name,
+			# 							   extraInput = False, filePart = extensions[0], networkSize = 3, saveName = '_Small_Full')
+			# generatedDM.keras_input(filePath+folderName_data,fileInputName, filePart = extensions[1], simpleArchitecture = simpleArchitecture) # create keras input for test set
 		# ------------------------------------------------------------------------
-			print('-- Hruschka MNL --')
-			simpleArchitecture = True
-			beta_num = 3
-			nExtraFeatures = 3
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName_data,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
-			_, saveExtension = GeneratedMixed(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
-											  train_data_name, extraInput = False, filePart = extensions[0], networkSize = 3)
-			generatedDM.keras_input(filePath+folderName_data,fileInputName, filePart = extensions[1], simpleArchitecture = simpleArchitecture) # create keras input for test set
+			# print('-- Hruschka MNL --')
+			# simpleArchitecture = True
+			# beta_num = 3
+			# nExtraFeatures = 3
+			# _,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName_data,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
+			# saveExtension = GeneratedHrusch07(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
+			# 								  train_data_name, filePart = extensions[0], networkSize = 3)
+			# generatedDM.keras_input(filePath+folderName_data,fileInputName, filePart = extensions[1], simpleArchitecture = simpleArchitecture) # create keras input for test set
 
 
 # ------ Scan testing correlation effects on MNL and LMNL
 	if correlations:
-		filePath = 'generated_data/'
+		filePath = 'generated_guev/'
 		folderName = 'correlations/'
 		fileInputBase = 'generated'
 
@@ -258,7 +281,7 @@ if __name__ == '__main__':
 			simpleArchitecture = False
 			beta_num = 6 # ASC + 5 betas
 			nExtraFeatures = 0
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
 			generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[1], simpleArchitecture = simpleArchitecture) # create keras input for test set
 			#Full MNL
 			print('-- Full MNL -- ')
@@ -269,7 +292,7 @@ if __name__ == '__main__':
 			simpleArchitecture = True
 			beta_num = 3
 			nExtraFeatures = 3
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
 			print('-- MNL --')
 			_, saveExtension = GeneratedMNL(filePath+folderName, fileInputName,  beta_num, choices_num, train_data_name, filePart = extensions[0] )
 			generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[1], simpleArchitecture = simpleArchitecture) # create keras input for test set
@@ -278,7 +301,7 @@ if __name__ == '__main__':
 			print('-- Our Model --')
 			lmnlArchitecture = True
 			beta_num = 2
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0],
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0],
 														   lmnlArchitecture = lmnlArchitecture) # create keras input for train set
 			_, saveExtension = GeneratedMixed(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
 											  train_data_name, extraInput = True, filePart = extensions[0], networkSize = 100)
@@ -286,7 +309,7 @@ if __name__ == '__main__':
 
 # -------- Scan when model is missing Causalities -----
 	if unseen:
-		filePath = 'generated_data/'
+		filePath = 'generated_guev/'
 		folderName = 'unseen/'
 		fileInputBase = 'generated'
 
@@ -298,7 +321,7 @@ if __name__ == '__main__':
 			simpleArchitecture = False
 			beta_num = 6 # ASC + 5 betas
 			nExtraFeatures = 0
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0],
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0],
 														   simpleArchitecture = simpleArchitecture) # create keras input for train set
 			_, saveExtension = GeneratedMNL(filePath+folderName, fileInputName,  beta_num, choices_num, train_data_name,
 											filePart = extensions[0], saveName = '_Full')
@@ -307,21 +330,21 @@ if __name__ == '__main__':
 			simpleArchitecture = True
 			beta_num = 3
 			nExtraFeatures = 3
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
 			_, saveExtension = GeneratedMNL(filePath+folderName, fileInputName,  beta_num, choices_num, train_data_name, filePart = extensions[0])
 
 			#Our Model
 			print('-- Our Model --')
 			lmnlArchitecture = True
 			beta_num = 2
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], lmnlArchitecture = lmnlArchitecture) # create keras input for train set
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], lmnlArchitecture = lmnlArchitecture) # create keras input for train set
 			_, saveExtension = GeneratedMixed(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
 											  train_data_name, extraInput = True, filePart = extensions[0], networkSize = 100)
 
 
 #------------ Experiment when model is faced with noisy data ------
 	if noise_data:
-		filePath = 'generated_data/'
+		filePath = 'generated_guev/'
 		folderName = 'noise_input/'
 		fileInputBase = 'generated'
 
@@ -333,13 +356,13 @@ if __name__ == '__main__':
 			simpleArchitecture = True
 			beta_num = 3
 			nExtraFeatures = 3
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], simpleArchitecture = simpleArchitecture) # create keras input for train set
 			_, saveExtension = GeneratedMNL(filePath+folderName, fileInputName,  beta_num, choices_num, train_data_name, filePart = extensions[0])
 
 
 			print('-- Our Model --')
 			lmnlArchitecture = True
 			beta_num = 2
-			_,_, train_data_name = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], lmnlArchitecture = lmnlArchitecture) # create keras input for train set
+			_,_, train_data_name, beta_num, nExtraFeatures  = generatedDM.keras_input(filePath+folderName,fileInputName, filePart = extensions[0], lmnlArchitecture = lmnlArchitecture) # create keras input for train set
 			_, saveExtension = GeneratedMixed(filePath+folderName, fileInputName, beta_num, choices_num, nExtraFeatures,
 											  rain_data_name, extraInput = True, filePart = extensions[0], networkSize = 100)

@@ -22,7 +22,7 @@ from copy import copy, deepcopy
 	- Sensitivity analysis
 	and basic functions
 
-	The main is used to investigate models one by one. 
+	The main is used to investigate models one by one.
 """
 
 
@@ -57,28 +57,157 @@ def get_inverse_Hessian(model, model_inputs, labels, layer_name='Utilities'):
 
 	return invHess
 
-def get_inputs_gradient(model, model_inputs, labels, inputs_indice=0):
+def get_inputs_gradient(model, model_inputs, labels, custom = False, inputs_indice=0, flag=None):
 	""" Get gradients on input layer with respect to prediction score (custom loss)"""
+	if custom:
+		def custom_loss(y_true, y_pred):
+			return y_true*y_pred
+		#	return y_pred
+			#return y_true*K.log(1-y_pred)
+			# Loss needs to be changed. Create a copy to avoid changing original model
+		model_dummy = clone_model(model)
+		model_dummy.set_weights(model.get_weights())
+		model_dummy = Model(inputs=model_dummy.inputs, outputs=model_dummy.get_layer('New_Utility_functions').output)
+		#model_dummy = Model(inputs=model_dummy.inputs, outputs=model_dummy.layers[-2].output)
+		model_dummy.compile(loss=custom_loss, optimizer = 'adam', metrics = ['accuracy'])
+	else:
+		def custom_loss(y_true, y_pred):
+			return y_pred
+			#return y_true*K.log(1-y_pred)
+			# Loss needs to be changed. Create a copy to avoid changing original model
+		# model_dummy = clone_model(model)
+		model_dummy = model
+		model_dummy.set_weights(model.get_weights())
+		model_dummy = Model(inputs=model_dummy.inputs, outputs=model_dummy.layers[-2].output)
+		model_dummy.compile(loss=custom_loss, optimizer = 'adam', metrics = ['accuracy'])
 
-	def custom_loss(y_true, y_pred):
-		return y_true*y_pred
-		#return y_true*K.log(1-y_pred)
-# Loss needs to be changed. Create a copy to avoid changing original model
-	model_dummy = clone_model(model)
-	model_dummy.set_weights(model.get_weights())
-	model_dummy = Model(inputs=model_dummy.inputs, outputs=model_dummy.get_layer('New_Utility_functions').output)
-	model_dummy.compile(loss=custom_loss, optimizer = 'adam', metrics = ['accuracy'])
-	inputs_layer_placeholder = model_dummy.inputs[inputs_indice]
 
-# Define the function
 	input_tensors= model_dummy.inputs + model_dummy.sample_weights + model_dummy.targets + [K.learning_phase()]
-	inputs_gradient = K.gradients(model_dummy.total_loss, inputs_layer_placeholder)
-	get_gradient = K.function(inputs=input_tensors, outputs = inputs_gradient)
+# Define the function
+	if flag is None:
+		inputs_layer_placeholder = model_dummy.inputs[inputs_indice]
+		inputs_gradient = K.gradients(model_dummy.total_loss, inputs_layer_placeholder)
+		#inputs_gradient = K.gradients(model_dummy.outputs[0], inputs_layer_placeholder)
+		get_gradient = K.function(inputs=input_tensors, outputs = inputs_gradient)
+		func_inputs=[*[inputs for inputs in model_inputs], np.ones(len(model_inputs[0])), labels, 0]
+		heatmap = np.squeeze(get_gradient(func_inputs))
+
+	if flag=='S':
+		inputs_placeholders = []
+
+		for i,input in enumerate(model_dummy.inputs):
+			if i!=0:
+				inputs_placeholders.append(input)
+
+		inputs_gradient = K.gradients(model_dummy.total_loss, inputs_placeholders)
+		# inputs_gradient = K.gradients(model_dummy.total_loss, [inputs_layer_placeholder1, inputs_layer_placeholder2, inputs_layer_placeholder3])
+		get_gradient = K.function(inputs=input_tensors, outputs = inputs_gradient)
+
+		func_inputs=[*[inputs for inputs in model_inputs], np.ones(len(model_inputs[0])), labels, 0]
+		heatmap = np.squeeze(get_gradient(func_inputs))
+		heatmap = np.swapaxes(heatmap,0,1)
+		heatmap = np.swapaxes(heatmap,1,2)
+
+		inputs_layer_placeholder1 = model_dummy.inputs[0]
+		inputs_gradient = K.gradients(model_dummy.total_loss, inputs_layer_placeholder1)
+		get_gradient = K.function(inputs=input_tensors, outputs = inputs_gradient)
+		func_inputs=[*[inputs for inputs in model_inputs], np.ones(len(model_inputs[0])), labels, 0]
+		heatmap2 = np.squeeze(get_gradient(func_inputs))
+		# heatmap2 = np.expand_dims(np.squeeze(get_gradient(func_inputs)), axis=1)
+		print(heatmap2.shape)
+		print(heatmap.shape)
+		heatmap = np.concatenate((heatmap2, heatmap), axis=1)
+
+	if flag=='S2':
+		inputs_placeholders = []
+
+		for i,input in enumerate(model_dummy.inputs):
+			if i!=0:
+				inputs_placeholders.append(input)
+
+		inputs_gradient = K.gradients(model_dummy.total_loss, inputs_placeholders)
+		# inputs_gradient = K.gradients(model_dummy.total_loss, [inputs_layer_placeholder1, inputs_layer_placeholder2, inputs_layer_placeholder3])
+		get_gradient = K.function(inputs=input_tensors, outputs = inputs_gradient)
+
+		func_inputs=[*[inputs for inputs in model_inputs], np.ones(len(model_inputs[0])), labels, 0]
+		heatmap = np.squeeze(get_gradient(func_inputs))
+	#	heatmap = np.swapaxes(heatmap,0,1)
+	#	heatmap = np.swapaxes(heatmap,1,2)
+
+		inputs_layer_placeholder1 = model_dummy.inputs[0]
+		inputs_gradient = K.gradients(model_dummy.total_loss, inputs_layer_placeholder1)
+		get_gradient = K.function(inputs=input_tensors, outputs = inputs_gradient)
+		func_inputs=[*[inputs for inputs in model_inputs], np.ones(len(model_inputs[0])), labels, 0]
+		heatmap2 = np.squeeze(get_gradient(func_inputs))
+		# heatmap2 = np.expand_dims(np.squeeze(get_gradient(func_inputs)), axis=1)
+		print(heatmap2.shape)
+		print(heatmap.shape)
+		heatmap = np.concatenate((heatmap2, heatmap), axis=1)
+
+	if flag=='H':
+		inputs_placeholders = []
+		for i,input in enumerate(model_dummy.inputs):
+			inputs_placeholders.append(input)
+		# inputs_layer_placeholder1 = model_dummy.inputs[0]
+		# inputs_layer_placeholder2 = model_dummy.inputs[1]
+		# inputs_layer_placeholder3 = model_dummy.inputs[2]
+		inputs_gradient = K.gradients(model_dummy.total_loss, inputs_placeholders)
+		# inputs_gradient = K.gradients(model_dummy.total_loss, [inputs_layer_placeholder1, inputs_layer_placeholder2, inputs_layer_placeholder3])
+		get_gradient = K.function(inputs=input_tensors, outputs = inputs_gradient)
+
+		func_inputs=[*[inputs for inputs in model_inputs], np.ones(len(model_inputs[0])), labels, 0]
+		heatmap = np.squeeze(get_gradient(func_inputs))
+		heatmap = np.swapaxes(heatmap,0,1)
+		heatmap = np.swapaxes(heatmap,1,2)
+
+	if flag=='L':
+		inputs_layer_placeholder1 = model_dummy.inputs[0]
+		inputs_layer_placeholder2 = model_dummy.inputs[1]
+		#inputs_gradient = K.gradients(model_dummy.total_loss, [inputs_layer_placeholder1, inputs_layer_placeholder2])
+		inputs_gradient = K.gradients(model_dummy.total_loss, inputs_layer_placeholder1)
+		get_gradient = K.function(inputs=input_tensors, outputs = inputs_gradient)
+
+		inputs_gradient2 = K.gradients(model_dummy.total_loss, inputs_layer_placeholder2)
+		get_gradient2 = K.function(inputs=input_tensors, outputs = inputs_gradient2)
+
+		func_inputs=[*[inputs for inputs in model_inputs], np.ones(len(model_inputs[0])), labels, 0]
+		heatmap = np.squeeze(get_gradient(func_inputs))
+		print(heatmap.shape)
+
+		heatmap2 = np.squeeze(get_gradient2(func_inputs))
+		print(heatmap2.shape)
+		heatmap2 = np.array([heatmap2/3, heatmap2/3, heatmap2/3])
+		print(heatmap2.shape)
+		heatmap2 = np.swapaxes(heatmap2,0,1)
+		heatmap2 = np.swapaxes(heatmap2,1,2)
+
+		heatmap = np.concatenate((heatmap, heatmap2), axis=1)
+
+	if flag=='L2':
+		inputs_layer_placeholder1 = model_dummy.inputs[0]
+		inputs_layer_placeholder2 = model_dummy.inputs[1]
+		#inputs_gradient = K.gradients(model_dummy.total_loss, [inputs_layer_placeholder1, inputs_layer_placeholder2])
+		inputs_gradient = K.gradients(model_dummy.total_loss, inputs_layer_placeholder1)
+		get_gradient = K.function(inputs=input_tensors, outputs = inputs_gradient)
+
+		inputs_gradient2 = K.gradients(model_dummy.total_loss, inputs_layer_placeholder2)
+		get_gradient2 = K.function(inputs=input_tensors, outputs = inputs_gradient2)
+
+		func_inputs=[*[inputs for inputs in model_inputs], np.ones(len(model_inputs[0])), labels, 0]
+		heatmap = np.squeeze(get_gradient(func_inputs))
+		print(heatmap.shape)
+
+		heatmap2 = np.squeeze(get_gradient2(func_inputs))
+		print(heatmap2.shape)
+		#heatmap2 = np.array([heatmap2/3, heatmap2/3, heatmap2/3])
+		#print(heatmap2.shape)
+		#heatmap2 = np.swapaxes(heatmap2,0,1)
+		#heatmap2 = np.swapaxes(heatmap2,1,2)
+
+		heatmap = np.concatenate((heatmap, heatmap2), axis=1)
+
 
 # Get inputs and call function
-	func_inputs=[*[inputs for inputs in model_inputs], np.ones(len(model_inputs[0])), labels, 0]
-	heatmap = np.squeeze(get_gradient(func_inputs))
-
 	return heatmap
 
 
@@ -201,7 +330,7 @@ if __name__ == '__main__':
 
 	model_name = 'generated_data/generated_MNLBetaFreeze.h5'
 	train_name = 'generated_data/keras_input_generated_train.npy'
-	
+
 	model_name = '../generated_data/freeze/generated_EnhancedNNFreeze2.h5'
 	train_name = '../generated_data/freeze/keras_input_generated_noASC_train.npy'
 	extra_name = '../generated_data/freeze/keras_input_generated_noASC_train_extra.npy'
@@ -211,7 +340,7 @@ if __name__ == '__main__':
 #	model_name = 'swissmetro_paper/Swissmetro_paper_Enhanced2layer100extra.h5'
 #	train_name = 'swissmetro_paper/keras_input_Swissmetro_paper_train.npy'
 #	extra_name = 'swissmetro_paper/keras_input_Swissmetro_paper_train_extra.npy'
-#	
+#
 #	model_name = '../generated_data/poster/generated_data_Enhancedscan100extra.h5'
 #	train_name = '../generated_data/poster/keras_input_generated_data_simple_train.npy'
 #	extra_name = '../generated_data/poster/keras_input_generated_data_simple_train_extra.npy'
@@ -228,12 +357,12 @@ if __name__ == '__main__':
 #	extra_name = '../generated_data/poster/keras_input_generated_data_2betas_simple_train_extra.npy'
 
 	model = load_model(model_name)
-	
+
 	train_data = np.load(train_name)
 	labels = train_data[:,-1,:]
 	train_data = np.delete(train_data, -1, axis = 1)
 	train_data = np.expand_dims(train_data, -1)
-	
+
 
 	extra_data = np.load(extra_name)
 	extra_data = np.expand_dims(extra_data,-1)

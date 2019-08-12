@@ -38,14 +38,18 @@ def keras_input(filePath, fileInputName, filePart = '', simpleArchitecture = Fal
     data = np.loadtxt(filePath + fileInputName + filePart + '.dat',skiprows = 1)
     choices_num = 2
 
-
+    # print(data.shape)
     #Define:
-    x1 = data[:,0]
-    x2 = data[:,1]
-    x3 = data[:,2]
-    x4 = data[:,3]
-    x5 = data[:,4]
-    x6 = data[:,5]
+    p1 = data[:,0]
+    p2 = data[:,1]
+    a1 = data[:,2]
+    a2 = data[:,3]
+    b1 = data[:,4]
+    b2 = data[:,5]
+    q1 = data[:,6]
+    q2 = data[:,7]
+    c1 = data[:,8]
+    c2 = data[:,9]
     choice = data[:,-1]
 
     choice1 = choice == 1
@@ -56,47 +60,55 @@ def keras_input(filePath, fileInputName, filePart = '', simpleArchitecture = Fal
 
     """Utility Specifications: """
     train_data = np.array(
-        [[ASCs, x1,  x2, x3, x4, x5, choice1]#,
-      #   [ZEROs, ZEROs, x2, ZEROs, ZEROs, ZEROs, choice2]
+        [[ASCs, p1,  a1, b1, q1, c1, choice1],
+         [ZEROs, p2, a2, b2, q2, c2, choice2]
           ])
 
     if simpleArchitecture:
         train_data = np.array(
-            [[ASCs, x1, x2, choice1]])
+            [[ASCs, p1, a1, b1, choice1],
+            [ZEROs, p2, a2, b2, choice2]
+            ])
 
     if lmnlArchitecture or correlArchitecture:
         train_data = np.array(
-            [[x1, x2, choice1]#,
-          #  [ZEROs, x2, choice1]
+            [[p1, a1, b1, choice1],
+            [p2, a2, b2, choice2]
         ])
 
     if trueArchitecture:
         train_data = np.array(
-            [[x1, x2, x3*x4, x3*x5, choice1]])
+            [[p1, a1, b1, q1*c1, choice1],
+            [p2, a2, b2, q2*c2, choice2]
+            ])
     if subArchitecture:
         train_data = np.array(
-            [[ASCs, ZEROs, choice1]])
+            [[ASCs, ZEROs, choice1],
+             [ASCs, ZEROs, choice2]
+             ])
 
     train_data = np.swapaxes(train_data,0,2)
 
     if write:
         np.save(train_data_name, np.array(train_data, dtype=np.float32))
 
-    delete_list = range(len(data))
-    delete_list = np.delete(delete_list, [2,3,4])
+    delete_list = range(len(data[0]))
+    # print(delete_list)
+    delete_list = np.delete(delete_list, [6,7,8,9])
+    # print(delete_list)
 
     if simpleArchitecture or lmnlArchitecture:
         # Hybrid Simple
         extra_data = np.delete(data,delete_list,axis = 1)
     elif correlArchitecture:
-        extra_data = data[:,:5]
+        extra_data = data[:,:9]
     elif subArchitecture:
-        extra_data = [data[:,:5]]
+        extra_data = [data[:,:9]]
     else:
         # Hybrid MNL
         extra_data = np.delete(data,range(len(data)),axis = 1)
 
     if write:
         np.save(train_data_name[:-4] + '_extra.npy', extra_data)
-
-    return train_data, extra_data, train_data_name
+    # print(extra_data[0].size)
+    return train_data, extra_data, train_data_name, len(train_data[0])-1, extra_data[0].size

@@ -52,31 +52,64 @@ n_args = 4
 def invlogit(x):
 	return np.exp(x) / (1 + np.exp(x))
 
+def ProbaX(x,y):
+	return np.exp(x) / (np.exp(x) + np.exp(y))
+
 def generate_outcomes(n, coeff, *args):
-	a1, a2, a3, a4, *_ = args
+	A1, A2, A3, A4, *_ = args
+	l=1
+	a1 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	a2 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	b1 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	b2 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	h1 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	h2 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	ek1 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	ek2 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	eq1 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	eq2 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	ep1 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	ep2 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
 
-	x1 = np.expand_dims(np.random.normal(size=n),1)
-	x2 = np.expand_dims(np.random.normal(size=n),1)
-	x3 = np.expand_dims(np.random.normal(size=n),1)
-	x4 = np.expand_dims(np.random.normal(size=n),1)
-	x5 = np.expand_dims(np.random.normal(size=n),1)
+	z1 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	z2 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	wz1 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+	wz2 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+
+	k1 = 1*h1 + ek1
+	k2 = 1*h2 + ek2
+
+	q1 = 2*h1 + 1*k1  + eq1
+	q2 = 2*h2 + 1*k2  + eq2
+
+	p1 =  5+ z1+ 0.03*wz1 + ep1  #+ 1.0*q1
+	p2 =  5+ z2+ 0.03*wz2 + ep2  #+ 1.0*q2
+
+	c1 = np.expand_dims(np.random.uniform(low=-1,high=1,size=n),1)
+	c2 = np.expand_dims(np.random.uniform(low=-1,high=1,size=n),1)
+
+
+
+
 	if correlations:
-		x3 = coeff*x1 + x3*(1-coeff**2)**0.5
-	if unseen:
-		x6 = np.expand_dims(np.random.normal(size=n),1)
-		x7 = np.expand_dims(np.random.normal(size=n),1)
-		a5 = _[0]
-# ------------------- The Toy Function ------------------------------
-	predictors = a1*x1 + a2*x2 + a3*x3*x4 + a4*x3*x5
-	predictors = 2*x1 + 3*x2 + 0.5*x3*x4 + 1*x3*x5
+		p1 = coeff*q1 + p1*(1-coeff**2)**0.5
+		p2 = coeff*q2 + p2*(1-coeff**2)**0.5
 
+	if unseen:
+		x6 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+		x7 = np.expand_dims(np.random.uniform(low=-l,high=l,size=n),1)
+		A5 = _[0]
+# ------------------- The Toy Function ------------------------------
+	U1 = A1*p1 + A2*a1 + A3*b1+ A4*q1*c1 #+ ev1 instead of gumbel distribution, we perform invert logit probability sampling
+	U2 = A1*p2 + A2*a2 + A3*b2+ A4*q2*c2 #+ ev2
 # -------------------------------------------------------------------
 	if unseen:
-		predictors = predictors + a5*x6*x7
-		return np.random.binomial(1, invlogit(predictors)), x1, x2, x3, x4, x5, x6, x7
+		U1 = U1 + A5*x6
+		U2 = U2 + A5*x7
+		return np.random.binomial(1, ProbaX(U1,U2)), p1,p2, a1,a2, b1,b2, q1,q2, c1,c2, x6,x7
 
-	# return np.random.binomial(1, invlogit(predictors)), x1, x2, x3, x4, x5
-	return invlogit(predictors), x1, x2, x3, x4, x5
+	return np.random.binomial(1, ProbaX(U1,U2)), p1,p2, a1,a2, b1,b2, q1,q2, c1,c2
+	# return ProbaX(U1,U2),p1,p2, a1,a2, b1,b2, q1,q2, c1,c2
 
 
 def saveFile(fileName, data, headers):
@@ -93,18 +126,18 @@ def single_run(n, i, coeff, *args):
 		- a: function coefficients
 		- i: index of dataset
 	"""
-	headers = "x1\tx2\tx3\tx4\tx5\tchoice"
+	headers = "p1\tp2\ta1\ta2\tb1\tb2\tq1\tq2\tc1\tc2\tchoice"
 	if unseen:
-		headers="x1\tx2\tx3\tx4\tx5\tx6\tx7\tchoice"
+		headers = "p1\tp2\ta1\ta2\tb1\tb2\tq1\tq2\tc1\tc2\tx6\tx7\tchoice"
 
-	outcomes, x1, x2, x3, x4, x5, *_ = generate_outcomes(n, coeff, *args)
-	data = np.concatenate((x1,x2,x3,x4,x5,*_, outcomes), axis = 1)
-	# saveFile(filePath+ folderName + 'generated_{}_train.dat'.format(i), data, headers)
+	outcomes,  p1,p2, a1,a2, b1,b2, q1,q2, c1,c2, *_ = generate_outcomes(n, coeff, *args)
+	data = np.concatenate(( p1,p2, a1,a2, b1,b2, q1,q2, c1,c2,*_, outcomes), axis = 1)
+	saveFile(filePath+ folderName + 'generated_{}_train.dat'.format(i), data, headers)
 
 	n_test = int(n*0.2)
-	outcomes_test, x1, x2, x3, x4, x5, *_ = generate_outcomes(n_test, coeff, *args)
-	data_test = np.concatenate((x1,x2,x3,x4,x5,*_, outcomes_test), axis = 1)
-	# saveFile(filePath+ folderName + 'generated_{}_test.dat'.format(i), data_test, headers)
+	outcomes_test,  p1,p2, a1,a2, b1,b2, q1,q2, c1,c2, *_ = generate_outcomes(n_test, coeff, *args)
+	data_test = np.concatenate(( p1,p2, a1,a2, b1,b2, q1,q2, c1,c2,*_, outcomes_test), axis = 1)
+	saveFile(filePath+ folderName + 'generated_{}_test.dat'.format(i), data_test, headers)
 
 	return data, data_test
 
@@ -124,9 +157,9 @@ if __name__ == "__main__" :
 				args[2:4] = [0, 0, 0]
 
 			if illustrate:
-				args = [2, 3, 0.5, 1]
+				args = [-2, 1, 0.5, 1]
 			train, test = single_run(n_samples, i, coeff, *args)
-			# np.save(filePath + folderName + 'coef_{}.npy'.format(i), args)
+			np.save(filePath + folderName + 'coef_{}.npy'.format(i), args)
 			total = np.concatenate([total, train[:,-1]])
-		plt.hist(total)
-		plt.show()
+		# plt.hist(total)
+		# plt.show()
